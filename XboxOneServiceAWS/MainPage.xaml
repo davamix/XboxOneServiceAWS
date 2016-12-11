@@ -5,14 +5,48 @@
     xmlns:local="using:XboxOneServiceAWS"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:XboxOneServiceAWS.Models"
     mc:Ignorable="d"
     x:Name="MyPage">
 
     
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <ListView ItemsSource="{x:Bind Path=ViewModel.Values}" />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBox Grid.Row="0"
+                 Grid.Column="0"
+                 x:Name="txtSearch" />
+
+        <Button Grid.Row="0"
+                Grid.Column="1"
+                Content="Search"
+                Command="{x:Bind ViewModel.Search}"
+                CommandParameter="{Binding ElementName=txtSearch, Path=Text}"/>
+
+        <ListView Grid.Row="1"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="2"
+                  ItemsSource="{x:Bind ViewModel.Values}">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="models:TitleItem">
+                    <StackPanel Orientation="Horizontal">
+                        <!--<Image Height="100" Width="100" Source=""></Image>-->
+                        <TextBlock Text="{Binding Name}" />
+                    </StackPanel>
+
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
     </Grid>
 
 </Page>
