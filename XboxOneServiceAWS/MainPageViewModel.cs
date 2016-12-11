@@ -3,10 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.Data.Xml.Dom;
+using Windows.Storage;
 using XboxOneServiceAWS.Models;
 
 namespace XboxOneServiceAWS
@@ -42,9 +44,12 @@ namespace XboxOneServiceAWS
         private static readonly string ASSOCIATE_TAG = "***";
         private static readonly string ENDPOINT = "webservices.amazon.es";
 
+        private XmlDocument _doc;
+
         public ObservableCollection<TitleItem> Values { get; }
 
         public ICommand Search { get; set; }
+
 
         public MainPageViewModel()
         {
@@ -61,8 +66,19 @@ namespace XboxOneServiceAWS
                 .ContinueWith(x => ShowValues(x.Result),
                     CancellationToken.None,
                     TaskContinuationOptions.OnlyOnRanToCompletion,
-                    TaskScheduler.FromCurrentSynchronizationContext());
+                    TaskScheduler.FromCurrentSynchronizationContext())
+                    ;
 
+        }
+
+        private async Task SaveXml()
+        {
+            if (_doc == null) return;
+
+            var storage = ApplicationData.Current.LocalFolder;
+            var storageFile = await storage.CreateFileAsync("result.xml", CreationCollisionOption.ReplaceExisting);
+
+            FileIO.WriteTextAsync(storageFile, _doc.GetXml());
         }
 
         private async Task<string> GetQueryUrl(string keywords)
@@ -115,28 +131,56 @@ namespace XboxOneServiceAWS
             var returnValues = new List<TitleItem>();
 
             var doc = results.Result;
+            _doc = doc;
 
             var errors = doc.GetElementsByTagName("Message");
             if (errors != null && errors.Count > 0)
                 Debug.WriteLine($"ERRORS: {errors}");
 
-            var titles = doc.GetElementsByTagName("Title");
-            foreach (var title in titles)
-            {
-                var value = new TitleItem
-                {
-                    Name = title.InnerText,
-                    ImageUrl = "image"
-                };
 
-                returnValues.Add(value);
+            var xmlItems = doc.GetElementsByTagName("Item");
+            foreach (var xmlItem in xmlItems)
+            {
+                var item = CreateTitleItem(xmlItem);
+
+                returnValues.Add(item);
             }
+
+            //var titles = doc.GetElementsByTagName("Title");
+            //foreach (var title in titles)
+            //{
+            //    var value = new TitleItem
+            //    {
+            //        Name = title.InnerText,
+            //        ImageUrl = "image"
+            //    };
+
+            //    returnValues.Add(value);
+            //}
 
             return returnValues;
         }
 
+        private TitleItem CreateTitleItem(IXmlNode xmlItem)
+        {
+            var titleItem = new TitleItem();
+
+            var titleNode =
+                xmlItem.ChildNodes.FirstOrDefault(x => x.NodeName.Equals("ItemAttributes"))?
+                    .ChildNodes.FirstOrDefault(t => t.NodeName.Equals("Title"));
+            titleItem.Name = titleNode?.InnerText;
+
+            var titleImage = xmlItem.ChildNodes.FirstOrDefault(x=>x.NodeName.Equals("MediumImage"))?.FirstChild;
+            titleItem.ImageUrl = titleImage?.InnerText;
+
+            return titleItem;
+        }
+
         private async Task ShowValues(Task<IList<TitleItem>> values)
         {
+
+            SaveXml();
+
             Values.Clear();
 
             foreach (var value in values.Result)

@@ -9,7 +9,6 @@
     mc:Ignorable="d"
     x:Name="MyPage">
 
-    
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Margin="12">
         <Grid.RowDefinitions>
@@ -24,10 +23,12 @@
 
         <TextBox Grid.Row="0"
                  Grid.Column="0"
-                 x:Name="txtSearch" />
+                 x:Name="txtSearch" 
+                 Margin="5"/>
 
         <Button Grid.Row="0"
                 Grid.Column="1"
+                Margin="5"
                 Content="Search"
                 Command="{x:Bind ViewModel.Search}"
                 CommandParameter="{Binding ElementName=txtSearch, Path=Text}"/>
@@ -35,18 +36,18 @@
         <ListView Grid.Row="1"
                   Grid.Column="0"
                   Grid.ColumnSpan="2"
+                  Margin="5"
                   ItemsSource="{x:Bind ViewModel.Values}">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="models:TitleItem">
                     <StackPanel Orientation="Horizontal">
-                        <!--<Image Height="100" Width="100" Source=""></Image>-->
+                        <Image Height="100" Width="100" Source="{Binding ImageUrl}"/>
                         <TextBlock Text="{Binding Name}" />
                     </StackPanel>
 
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-
     </Grid>
 
 </Page>
