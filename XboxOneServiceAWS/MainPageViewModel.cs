@@ -46,9 +46,12 @@ namespace XboxOneServiceAWS
 
         private XmlDocument _doc;
 
+        private string _selectedCategory;
+
         public ObservableCollection<TitleItem> Values { get; }
 
         public ICommand Search { get; set; }
+        public ICommand SetCategory { get; set; }
 
 
         public MainPageViewModel()
@@ -56,6 +59,12 @@ namespace XboxOneServiceAWS
             Values = new ObservableCollection<TitleItem>();
 
             Search = new DelegateCommand(x => true, SearchInAmazon);
+            SetCategory = new DelegateCommand(x=>true, SetCategorySearch);
+        }
+
+        private void SetCategorySearch(string category)
+        {
+            _selectedCategory = category;
         }
 
         private void SearchInAmazon(string keywords)
@@ -101,10 +110,11 @@ namespace XboxOneServiceAWS
                 {"Operation", "ItemSearch"},
                 {"AWSAccessKeyId", AWS_ACCESS_KEY_ID},
                 {"AssociateTag", ASSOCIATE_TAG},
-                {"SearchIndex", "DVD"},
+                {"SearchIndex", _selectedCategory},
                 {"ResponseGroup", "Images,ItemAttributes"},
-                {"Sort", "price"},
-                {"Keywords", keywords}
+                {"Sort", "salesrank"},
+                //{"Keywords", keywords},
+                {"Title", keywords }
             };
 
             return signedHelper.Sign(parameters);
